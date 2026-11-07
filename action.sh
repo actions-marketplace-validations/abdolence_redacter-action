@@ -39,11 +39,16 @@ sha256_of() {
     fi
 }
 
-# SHA-256 digests of the archives of the default version, as "<version>/<asset>". An install of the
-# default version needs no API call and no token, and a replaced release asset is refused. Update
-# them together with the default `version` in action.yml.
+# SHA-256 digests of the archives of the pinned versions, as "<version>/<asset>". An install of a pinned
+# version needs no API call and no token, and a replaced release asset is refused. Add the digests of a new
+# default `version` of action.yml here, and keep those of the earlier ones.
 pinned_sha256() {
     case "$1" in
+        0.22.2/redacter-Linux-x86_64.tar.gz) echo 3dfe3e5ece0c9496d527530739c2cb473484a2f7b827c7e36c9cd0e16846a465 ;;
+        0.22.2/redacter-Linux-aarch64.tar.gz) echo 8b23ecf7429a7a7756fe41816005a7ac5776afff8515cad44bee85d5c0b60d43 ;;
+        0.22.2/redacter-Darwin-aarch64.tar.gz) echo 45303dac15f64b58e8f85f73a9618f3724485d38e248891423fd02c1542d0206 ;;
+        0.22.2/redacter-Darwin-x86_64.tar.gz) echo a4225e20290a7cf16bb6d3d7aeed76f8db4e333088b076ffb4adc16575e61b21 ;;
+        0.22.2/redacter-Windows-x86_64.zip) echo b72d36b5df9446d58af0769522c8623402e7e07f229a0c8984292bb7a1895162 ;;
         0.22.1/redacter-Linux-x86_64.tar.gz) echo 6eae67ae54f0814778a5046d966675ee2c703028a143b8defbea462e9a03167c ;;
         0.22.1/redacter-Linux-aarch64.tar.gz) echo afac06c33cde9d1c55b901900f1fcbea21d8444fe85bdeb24c953b13fc6d73fb ;;
         0.22.1/redacter-Darwin-aarch64.tar.gz) echo 7c2f7e4b34cf63a00bca9682411f63c365898393bf38ab92e32b320f4b6c1dae ;;

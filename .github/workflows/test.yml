@@ -71,6 +71,7 @@ jobs:
           test "$EXIT_CODE" = 0
           test "$FINDINGS" = 2
           test "$CACHE_HIT" = true
+          test -z "$(find "$RUNNER_TEMP/redacter-addons" -maxdepth 1 -name 'credential-line*')"
 
       - name: Redact the planted secret
         id: cp
@@ -96,6 +97,65 @@ jobs:
           if grep -e AKIAIOSFODNN7EXAMPLE -e jane.doe@example.com "$REDACTED_FILE"; then
             exit 1
           fi
+
+  block-markers:
+    name: block markers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Scan a file with a marked region
+        id: scan
+        uses: ./
+        continue-on-error: true
+        with:
+          command: scan
+          path: test-fixtures/markers
+
+      - name: Check that only the value outside the region is reported
+        shell: bash
+        env:
+          OUTCOME: ${{ steps.scan.outcome }}
+          EXIT_CODE: ${{ steps.scan.outputs.exit-code }}
+          FINDINGS: ${{ steps.scan.outputs.findings }}
+          SARIF_FILE: ${{ steps.scan.outputs.sarif-file }}
+        run: |
+          set -x
+          test "$OUTCOME" = failure
+          test "$EXIT_CODE" = 2
+          test "$FINDINGS" = 1
+          jq -e '[.runs[0].results[] | .ruleId, .locations[0].physicalLocation.region.startLine] == ["local-rules/aws-access-key", 6]' "$SARIF_FILE"
+          jq -e '.runs[0].invocations[0].toolExecutionNotifications | length == 0' "$SARIF_FILE"
+
+  credential-ml:
+    name: local-credential-ml as an opt-in
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Scan with local-rules and local-credential-ml
+        id: scan
+        uses: ./
+        with:
+          command: scan
+          path: test-fixtures/secrets
+          fail-on: never
+          redacters: local-rules,local-credential-ml
+
+      - name: Check that the model was installed and the findings are the same
+        shell: bash
+        env:
+          EXIT_CODE: ${{ steps.scan.outputs.exit-code }}
+          FINDINGS: ${{ steps.scan.outputs.findings }}
+        run: |
+          set -x
+          test "$EXIT_CODE" = 0
+          test "$FINDINGS" = 2
+          test -n "$(find "$RUNNER_TEMP/redacter-addons" -maxdepth 1 -name 'credential-line*')"
 
   other-version:
     name: scan with a version that is not pinned

@@ -17,8 +17,10 @@ inputs:
   redacters:
     description: >-
       Redacters to run, separated by commas or new lines. The default runs on the runner only, so no data leaves it.
-      `local-gliner` downloads a model of about 1.17 GB on the first run, and the next runs restore it from the cache.
-    default: local-rules,local-credential-ml
+      `local-credential-ml` is opt-in: on source code it flags test vectors and public keys. It downloads a model of
+      about 130 MB on the first run. `local-gliner` downloads a model of about 1.17 GB, and the next runs restore both
+      from the cache.
+    default: local-rules
   categories:
     description: Data categories to look for, separated by commas or new lines, such as `secrets`, or only exclusions such as `!other`. Default is every category.
   fail-on:
@@ -31,7 +33,7 @@ inputs:
     default: "true"
   version:
     description: The redacter release to install, 0.22.0 or later. The default one is checked against SHA-256 digests pinned in the action.
-    default: 0.22.1
+    default: 0.22.2
   args:
     description: Further redacter arguments, one per line, such as `--local-rules=secrets,url`.
 

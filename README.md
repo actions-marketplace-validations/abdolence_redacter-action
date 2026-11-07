@@ -40,7 +40,10 @@ jobs:
 - the step fails when redacter finds something, and the upload still runs: the action sets `sarif-file` before it
   fails;
 - the scan leaves `.git` directories out. A `.redacterignore` file at the root of the repository keeps the mock keys
-  of test fixtures out of the scan, see
+  of test fixtures out of the scan;
+- `redacter:allow` on a line, or `redacter:allow-begin` and `redacter:allow-end` around several lines, keep single
+  findings out of the scan. A marker that does not pair up is a warning in the notifications of the SARIF report, and
+  hides nothing. See
   [Ignoring files and findings](https://github.com/abdolence/redacter-rs#ignoring-files-and-findings).
 
 Redaction of files before they are uploaded:
@@ -71,12 +74,12 @@ A file that no redacter reads is left out of the copy. A file that fails is not 
 | `command` | Required | `scan` reports the secrets and personal data it finds, `cp` copies files with them redacted |
 | `path` | `.` | File or directory to scan or copy, relative to the workspace |
 | `destination` | | Where `cp` writes the redacted copy, ending with `/` for a directory. `cp` only |
-| `redacters` | `local-rules,local-credential-ml` | Redacters to run, separated by commas or new lines, see [What runs where](#what-runs-where) |
+| `redacters` | `local-rules` | Redacters to run, separated by commas or new lines, see [What runs where](#what-runs-where) |
 | `categories` | Every category | Data categories to look for, separated by commas or new lines, such as `secrets`, or only exclusions such as `!other`, see [Limiting to data categories](https://github.com/abdolence/redacter-rs#limiting-to-data-categories) |
 | `fail-on` | `findings` | What makes `scan` fail: `findings`, `unconfirmed` or `never`. `scan` only |
 | `addons` | `auto` | Addons to install and cache: `auto`, `none`, or a list such as `ocr,pdf` |
 | `cache` | `true` | `true` caches the addons between runs, `false` downloads them on every run, see [What runs where](#what-runs-where) |
-| `version` | `0.22.1` | The redacter release to install, 0.22.0 or later |
+| `version` | `0.22.2` | The redacter release to install, 0.22.0 or later |
 | `args` | | Further redacter arguments, one per line, such as `--local-rules=secrets,url` |
 
 Addons are the files redacter needs and does not bundle: the OCR models (`ocr`), the Pdfium library that renders PDF
@@ -122,9 +125,10 @@ step that gates on `findings` also checks `exit-code`.
   runs restore them instead. The cache is saved before redacter runs, so a scan that fails on findings still fills it.
   A repository has 10 GB of Actions cache, so `cache: false` keeps the addons out of it, at the cost of downloading
   them on every run;
-- the local redacters run on the runner, and no data leaves it. The default, `local-rules` and `local-credential-ml`,
-  needs no credentials and downloads a model of about 130 MB on the first run. `local-gliner` downloads a model of
-  about 1.17 GB;
+- the local redacters run on the runner, and no data leaves it. The default, `local-rules`, needs no credentials and
+  no model. `local-credential-ml` is opt-in, as on source code it flags test vectors and public keys; add it with
+  `redacters: local-rules,local-credential-ml`, and it downloads a model of about 130 MB on the first run.
+  `local-gliner` downloads a model of about 1.17 GB;
 - the cloud redacters (GCP DLP, AWS Comprehend, AWS Bedrock and Guardrails, Vertex AI, Gemini, OpenAI) send the content
   of the files to their provider, and Presidio sends it to the server you run. They take credentials as the command
   line tool does, for example from `google-github-actions/auth` or `aws-actions/configure-aws-credentials`, and their
